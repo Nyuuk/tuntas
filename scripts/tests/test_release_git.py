@@ -54,5 +54,33 @@ class GitGateTest(unittest.TestCase):
                 mod.check_policy({'certificate_sha256': mod.CERT, 'approved_tag': None, 'approved_commit': None}, 'v1.2.3', commit)
             mod.check_policy({'certificate_sha256': mod.CERT, 'approved_tag': 'v1.2.3', 'approved_commit': commit}, 'v1.2.3', commit)
 
+    def test_malformed_historical_file_is_not_normalized(self):
+        import json
+        import release_ci as ci
+        with tempfile.TemporaryDirectory() as directory:
+            def git(*args):
+                return subprocess.check_output(['git', '-C', directory, *args], text=True).strip()
+            git('init', '-q', '--initial-branch=main')
+            git('config', 'user.name', 'Fixture')
+            git('config', 'user.email', 'fixture@example.invalid')
+            (Path(directory) / 'version.properties').write_text(' versionName=1.0.0\nversionCode=2\n')
+            git('add', 'version.properties')
+            git('-c', 'commit.gpgsign=false', 'commit', '-qm', 'Malformed historical fixture')
+            git('-c', 'tag.gpgsign=false', 'tag', '-a', 'v1.0.0', '-m', 'Historical fixture only')
+            pages = [[{'tag_name': 'v1.0.0', 'id': 1, 'draft': False}]]
+            def cmd(*args):
+                if args[0] == 'gh':
+                    return json.dumps(pages)
+                return subprocess.check_output(args, cwd=directory, text=True).strip()
+            import os
+            before = os.getcwd()
+            try:
+                os.chdir(directory)
+                with mock.patch.object(ci, 'command', side_effect=cmd):
+                    with self.assertRaises(ValueError):
+                        ci.release_history('v2.0.0')
+            finally:
+                os.chdir(before)
+
 if __name__ == '__main__':
     unittest.main()

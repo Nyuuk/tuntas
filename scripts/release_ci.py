@@ -28,6 +28,10 @@ def command(*args):
 
 
 def git(*args):
+    # File contents are validator input, not a command-line scalar. Never strip
+    # whitespace: that could silently repair malformed historical metadata.
+    if args and args[0] == 'show':
+        return subprocess.check_output(['git', *args], text=True)
     return command('git', *args)
 
 

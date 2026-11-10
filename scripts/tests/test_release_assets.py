@@ -19,3 +19,5 @@ class ApkIdentityTest(unittest.TestCase):
                 mod.verify_identity(bad, cert, state)
         with self.assertRaises(ValueError):
             mod.verify_identity(good, cert.replace(mod.CERT, '0' * 64), state)
+        with self.assertRaises(ValueError):
+            mod.verify_identity(good, cert + '\nSigner #2 certificate SHA-256 digest: ' + mod.CERT, state)
