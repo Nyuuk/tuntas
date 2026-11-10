@@ -1,0 +1,151 @@
+name: Tuntas release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Validation only; current main only; never creates a tag or Release
+        required: true
+        type: choice
+        options: [validate-only]
+        default: validate-only
+
+permissions:
+  contents: read
+
+# Serialize ALL candidate tags and dispatches: versionCode comparisons are cross-tag.
+# Do not cancel a run that may already be uploading a draft.
+concurrency:
+  group: tuntas-release
+  cancel-in-progress: false
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+
+jobs:
+  gate:
+    if: github.repository == 'Nyuuk/tuntas' && ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      commit: ${{ steps.gate.outputs.commit }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Metadata and isolated Git fixture regressions
+        run: python3 -m unittest discover -s scripts/tests -v
+      - name: Verify trusted source, operator approval and all published version codes
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATION_MODE: ${{ inputs.mode }}
+        run: python3 scripts/release_ci.py gate --state gate.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: verified-gate
+          path: gate.json
+          if-no-files-found: error
+          retention-days: 2
+
+  build:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ needs.gate.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: verified-gate
+          path: ${{ runner.temp }}/verified-gate
+      - uses: gradle/actions/wrapper-validation@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+      - name: Install exact Android toolchain
+        run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - name: Verify Gradle 8.7 distribution and wrapper pin
+        run: python3 scripts/check_toolchain.py
+      - name: Recheck source before secret access
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATION_MODE: ${{ inputs.mode }}
+        run: python3 scripts/release_ci.py recheck --state "$RUNNER_TEMP/verified-gate/gate.json"
+      - name: Debug unit tests, lint and build (no release credentials)
+        run: >-
+          ./gradlew assembleDebug testDebugUnitTest lintDebug --no-daemon --max-workers=1
+          '-Dorg.gradle.jvmargs=-Xmx1024m -XX:MaxMetaspaceSize=384m -Dfile.encoding=UTF-8'
+          -Pkotlin.compiler.execution.strategy=in-process
+      - name: Release unit tests and lint, then signed release build
+        env:
+          TUNTAS_KEYSTORE_BASE64: ${{ secrets.TUNTAS_KEYSTORE_BASE64 }}
+          TUNTAS_KEYSTORE_PASSWORD: ${{ secrets.TUNTAS_KEYSTORE_PASSWORD }}
+          TUNTAS_KEY_ALIAS: ${{ secrets.TUNTAS_KEY_ALIAS }}
+          TUNTAS_KEY_PASSWORD: ${{ secrets.TUNTAS_KEY_PASSWORD }}
+        run: python3 scripts/sign_release.py
+      - name: Always remove ephemeral decoded signing material
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/tuntas-signing"
+      - name: Independently verify signed APK and create checksummed bundle
+        run: >-
+          python3 scripts/release_assets.py --state "$RUNNER_TEMP/verified-gate/gate.json"
+          --tools "$ANDROID_HOME/build-tools/34.0.0"
+      - name: Reject moved tags or changed release gates after build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATION_MODE: ${{ inputs.mode }}
+        run: python3 scripts/release_ci.py recheck --state "$RUNNER_TEMP/verified-gate/gate.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: signed-apk-bundle
+          path: |
+            dist/*.apk
+            dist/SHA256SUMS
+            dist/release-notes.md
+            dist/build-manifest.json
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [gate, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ needs.gate.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: verified-gate
+          path: ${{ runner.temp }}/verified-gate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: signed-apk-bundle
+          path: dist
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+      - run: sdkmanager 'build-tools;34.0.0'
+      - name: Revalidate, upload draft, read back bytes, recheck tag, then publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/publish_release.py --state "$RUNNER_TEMP/verified-gate/gate.json"
+          --tools "$ANDROID_HOME/build-tools/34.0.0"
