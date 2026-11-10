@@ -104,6 +104,20 @@ Clone di atas memerlukan akses SSH GitHub yang sudah dikonfigurasi. Di Windows, 
 
 Konfigurasi membatasi Gradle ke satu worker, tanpa daemon, heap 1 GiB, dan kompilasi Kotlin in-process. Jika seluruh dependensi telah tersedia di cache, tambahkan `--offline --max-workers=1 --no-daemon`. APK debug ditandatangani dengan debug key lokal oleh tooling Android; **bukan rilis produksi**, dan key tidak disertakan di repositori.
 
+## Rilis dan pembaruan
+
+Aturan lengkap dan antarmuka validator ada di [panduan rilis](docs/RELEASING.md); perubahan dicatat di [CHANGELOG](CHANGELOG.md). `version.properties` adalah sumber versi tunggal; versi development saat ini sengaja ditolak untuk publikasi. Validator membutuhkan Python 3.9+ tanpa dependensi tambahan:
+
+```bash
+python3 -m unittest discover -s scripts/tests -v
+```
+
+Rilis memerlukan kenaikan versi, catatan perubahan bermakna, commit bersih yang ditinjau dan terjangkau dari `main`, serta tag **annotated** yang cocok. **Minta persetujuan eksplisit Adnan atas commit/tag sebelum push tag atau publikasi**, termasuk rilis pertama. Menyiapkan otomasi tidak mengizinkan publikasi; tidak setiap tag sembarang boleh menjadi rilis. `v0.1.0-rc.1` hanya contoh konseptual, bukan tag yang telah dibuat.
+
+APK rilis harus memakai kunci rilis khusus yang disimpan di luar sumber. Gradle membaca `TUNTAS_KEYSTORE_FILE`, `TUNTAS_KEYSTORE_PASSWORD`, `TUNTAS_KEY_ALIAS`, dan `TUNTAS_KEY_PASSWORD` dari environment; task release gagal bila input tidak lengkap, tanpa fallback APK unsigned/debug. Build debug tidak memerlukan rahasia rilis. Jangan bagikan nilai environment atau log signing. Publikasi harus menyertakan APK bertanda tangan yang diverifikasi, SHA256 **sesudah signing**, dan catatan rilis dari commit tepat yang sama; panduan rilis menjabarkan pemeriksaan wajib workflow. Dokumen ini tidak mengklaim workflow publikasi sudah tersedia.
+
+**Sertifikat rilis baru tidak kompatibel untuk update di atas instalasi debug.** Jangan uninstall atau hapus data sekadar memaksa pemasangan bila datanya penting: tindakan itu menghilangkan data lokal. Belum ada ekspor/pemulihan atau jaminan migrasi lintas versi. Untuk pembaruan rilis dengan sertifikat yang sama, pasang di atas instalasi yang ada dan uji pelestarian data di perangkat; jangan menganggap unit test membuktikannya.
+
 ## Batasan dan status
 
 **Masih dalam pengembangan.** Unit test JVM mencakup pengulangan, persistensi, konfirmasi, penjadwalan, kebijakan pembatasan, serta guard mode terkunci. Itu bukan bukti perilaku fisik atau hasil render UI. **Penerimaan manual UI terkunci terbaru masih pending**, termasuk Back, rotasi, keyboard, dan transisi saat editor terbuka.
@@ -143,4 +157,6 @@ Layar diagnostik lama pada `ui/diagnostic/` tetap ada di sumber tetapi bukan ent
 
 ## Lisensi
 
-Sumber tersedia secara publik; **lisensi proyek belum ditentukan**. Ketersediaan publik bukan pemberian lisensi penggunaan ulang. Komponen pihak ketiga, termasuk Gradle Wrapper dan dependensi Android, tetap mengikuti ketentuan masing-masing.
+Kode proyek tersedia sebagai **source-available**, dengan lisensi **PolyForm-Noncommercial-1.0.0** ([teks lengkap](LICENSE), [sumber resmi](https://polyformproject.org/licenses/noncommercial/1.0.0)). Ini **bukan lisensi open source OSI**. Lisensi mengizinkan tujuan nonkomersial dan secara eksplisit mengizinkan penggunaan oleh organisasi amal, institusi pendidikan, organisasi riset publik, keselamatan/kesehatan publik, perlindungan lingkungan, serta institusi pemerintah tanpa memandang sumber pendanaan atau kewajiban akibat pendanaan. Ringkasan ini bukan larangan menyeluruh atas semua penggunaan organisasi, penggunaan berpendanaan atau nonprofit; rujuk teks lisensi untuk ketentuan lengkap.
+
+Komponen pihak ketiga, termasuk Gradle Wrapper dan dependensi Android, tetap mengikuti lisensi masing-masing; lisensi proyek tidak melisensikan ulang komponen tersebut. Pertahankan teks/URL lisensi dan notice yang berlaku saat mendistribusikan sumber atau APK.

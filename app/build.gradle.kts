@@ -1,6 +1,34 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+val appVersion = Properties().apply {
+    rootProject.file("version.properties").inputStream().use { load(it) }
+}
+val releaseSigningNames = listOf(
+    "TUNTAS_KEYSTORE_FILE", "TUNTAS_KEYSTORE_PASSWORD", "TUNTAS_KEY_ALIAS", "TUNTAS_KEY_PASSWORD"
+)
+val releaseSigning = releaseSigningNames.associateWith { providers.environmentVariable(it).orNull }
+val hasReleaseSigning = releaseSigning.values.all { !it.isNullOrBlank() }
+val validateReleaseSigningInputs = tasks.register("validateReleaseSigningInputs") {
+    doLast {
+        val missing = releaseSigningNames.filter { releaseSigning[it].isNullOrBlank() }
+        check(missing.isEmpty()) {
+            "Release signing requires environment variables: ${missing.joinToString()}. No unsigned release is allowed."
+        }
+        check(file(releaseSigning.getValue("TUNTAS_KEYSTORE_FILE")!!).isFile) {
+            "TUNTAS_KEYSTORE_FILE must point to a private keystore file outside source control."
+        }
+    }
+}
+// Guard every release task, including aggregate invocations; debug-only builds need no secrets.
+tasks.configureEach {
+    if (name.contains("release", ignoreCase = true) && name != "validateReleaseSigningInputs") {
+        dependsOn(validateReleaseSigningInputs)
+    }
 }
 
 android {
@@ -12,8 +40,8 @@ android {
         applicationId = "com.tuntas.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0-integrated-test"
+        versionCode = appVersion.getProperty("versionCode").toInt()
+        versionName = appVersion.getProperty("versionName")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -21,8 +49,20 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseSigning.getValue("TUNTAS_KEYSTORE_FILE")!!)
+                storePassword = releaseSigning.getValue("TUNTAS_KEYSTORE_PASSWORD")
+                keyAlias = releaseSigning.getValue("TUNTAS_KEY_ALIAS")
+                keyPassword = releaseSigning.getValue("TUNTAS_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
