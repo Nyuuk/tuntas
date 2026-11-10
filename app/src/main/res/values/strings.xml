@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Tuntas</string>
+    <string name="accessibility_service_label">Tuntas — Pembatas fokus</string>
+    <string name="accessibility_service_description">Dengan persetujuanmu, Tuntas melihat nama paket/jendela aplikasi untuk mengarahkan aplikasi di luar daftar darurat kembali ke Tuntas saat ada task tertunda. Tidak mengambil isi layar, teks, sandi, atau notifikasi. Tuntas, telepon dan bagian sistem penting dikecualikan. Pembatasan bersifat best-effort, bukan jaminan; akses darurat masih harus diuji pada perangkat tanpa melakukan panggilan nyata. Izin dapat dimatikan kapan saja di Setelan Android.</string>
+</resources>

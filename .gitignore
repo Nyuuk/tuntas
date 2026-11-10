@@ -1,0 +1,25 @@
+# Local tooling and Android SDK configuration
+.gradle/
+.kotlin/
+.idea/
+*.iml
+local.properties
+/build/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Private signing material, credentials and generated packages
+.env
+.env.*
+*.jks
+*.keystore
+*.pem
+*.key
+*.p12
+*.pfx
+*.apk
+*.aab
+*.log
+.DS_Store

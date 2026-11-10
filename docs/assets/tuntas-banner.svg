@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc">
+  <title id="title">Tuntas — ruang untuk fokus</title>
+  <desc id="desc">Ilustrasi identitas merek: centang emerald, lingkaran konsentris dan garis kemajuan di latar gelap. Bukan tangkapan layar aplikasi.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#111614"/><stop offset="1" stop-color="#17392d"/></linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#86d6b3" stroke-opacity=".06"/></pattern>
+  </defs>
+  <rect width="1200" height="400" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="400" rx="24" fill="url(#grid)"/>
+  <g fill="none" stroke="#86d6b3">
+    <circle cx="986" cy="200" r="145" stroke-opacity=".14"/>
+    <circle cx="986" cy="200" r="108" stroke-opacity=".28"/>
+    <circle cx="986" cy="200" r="70" stroke-opacity=".5"/>
+    <path d="m950 201 25 25 48-52" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <rect x="64" y="66" width="60" height="60" rx="18" fill="#203d32" stroke="#86d6b3" stroke-opacity=".4"/>
+  <path d="M80 83h28M80 93h16m-13 12 7 6 15-17" fill="none" stroke="#b8eed5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <g font-family="system-ui, sans-serif">
+    <text x="144" y="103" fill="#b8eed5" font-size="16" letter-spacing="4">RUANG UNTUK FOKUS</text>
+    <text x="64" y="217" fill="#f0f3ef" font-size="80" font-weight="700" letter-spacing="-3">Tuntas.</text>
+    <text x="68" y="267" fill="#b8eed5" font-size="26">Satu niat. Satu langkah. Sampai selesai.</text>
+    <text x="68" y="337" fill="#bbc7be" font-size="16" letter-spacing="2">JUJUR PADA DIRI SENDIRI · DATA TETAP LOKAL</text>
+  </g>
+  <path d="M68 294h350" stroke="#3d5d4d" stroke-width="3" stroke-linecap="round"/>
+  <path d="M68 294h230" stroke="#86d6b3" stroke-width="3" stroke-linecap="round"/>
+</svg>

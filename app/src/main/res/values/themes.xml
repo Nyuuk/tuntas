@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Match Compose before its first frame; never inherit a light launch window. -->
+    <style name="Base.Theme.Tuntas" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#111614</item>
+        <item name="android:colorAccent">#86D6B3</item>
+        <item name="android:statusBarColor">#111614</item>
+        <item name="android:navigationBarColor">#1B221E</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+    <style name="Theme.Tuntas" parent="Base.Theme.Tuntas" />
+</resources>

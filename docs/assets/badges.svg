@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="36" viewBox="0 0 640 36" role="img" aria-labelledby="title">
+  <title id="title">Android 8.0+ · Kotlin · Jetpack Compose · Offline · Development</title>
+  <g fill="#203d32" stroke="#4d6f5e">
+    <rect x="1" y="1" width="125" height="34" rx="8"/>
+    <rect x="136" y="1" width="82" height="34" rx="8"/>
+    <rect x="228" y="1" width="166" height="34" rx="8"/>
+    <rect x="404" y="1" width="86" height="34" rx="8"/>
+    <rect x="500" y="1" width="139" height="34" rx="8"/>
+  </g>
+  <g fill="#f0f3ef" font-family="system-ui, sans-serif" font-size="13" font-weight="600" text-anchor="middle">
+    <text x="64" y="23">Android 8.0+</text><text x="177" y="23">Kotlin</text>
+    <text x="311" y="23">Jetpack Compose</text><text x="447" y="23">Offline</text><text x="570" y="23">Development</text>
+  </g>
+</svg>
