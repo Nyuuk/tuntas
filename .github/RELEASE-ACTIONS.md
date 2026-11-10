@@ -6,6 +6,7 @@
 - Added independently verified dedicated release signing, post-sign checksums and source/build provenance. Tests and lint must pass before release packaging.
 - Added current-main **validation-only** dispatch; it builds/signs and uploads Actions artifacts without creating a tag or GitHub Release. Development metadata remains unchanged and is not misrepresented as publishable.
 - Added draft-first publication with uploaded-byte readback, final tag-object/history rechecks and no overwrite. A failed draft stays private for operator investigation, not automatic clobber/retry.
+- Fixed SDK setup in both build and publish by explicitly requesting only `platform-tools`. The pinned setup action defaults to `tools platform-tools`; real validation run [42750798274](https://github.com/Nyuuk/tuntas/actions/runs/42750798274) failed because `sdkmanager` could not find obsolete package `tools`, before Gradle or signing. Existing explicit SDK 34/build-tools 34.0.0 installation steps remain unchanged. This correction requires a new real Actions validation; local checks alone do not establish hosted build success.
 - No application behavior, permission, schema, UI or data-storage changes. No physical-device/UI/update/data-preservation validation is established by this workflow.
 
 Read [the release contract](../docs/RELEASING.md) and [agent rules](../AGENTS.md). This guide supplements, not replaces, the metadata validator interface. The retained development version is deliberately invalid for tag publication.

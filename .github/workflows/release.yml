@@ -72,6 +72,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: platform-tools
       - name: Install exact Android toolchain
         run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
       - name: Verify Gradle 8.7 distribution and wrapper pin
@@ -142,6 +144,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: platform-tools
       - run: sdkmanager 'build-tools;34.0.0'
       - name: Revalidate, upload draft, read back bytes, recheck tag, then publish
         env:
